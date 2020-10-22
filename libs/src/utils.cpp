@@ -1,6 +1,17 @@
 #include "../utils.h"
 #include <math.h>
 
+/**
+ * Method to return the rgb normalized color vector 
+ * 
+ * @param R the red color value [0, 255]
+ * @param G the red color value [0, 255]
+ * @param B the red color value [0, 255]
+ */
+float* getColor(int R, int G, int B) {
+    return new float[3] { R/255.f, G/255.f, B/255.f };
+}
+
 void drawAxis(bool drawXAxis, bool drawYAxis, bool drawZAxis) {
 
     glPushMatrix();

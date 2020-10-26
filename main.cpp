@@ -17,6 +17,9 @@
 
 using namespace std;
 
+int WINDOWS_WIDTH = 600;
+int WINDOWS_HEIGHT = 400;
+
 /* 0 <= xRotationAngle <= 2PI */
 float xRotationAngle = 4.8112;
 /* 0 <= yRotationAngle <= PI */
@@ -55,10 +58,13 @@ void setupCamera() {
 
 void draw(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    drawCrosshair(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
     setupCamera();
 
     drawAxis(true, true, true);
+
     buildWall(new float[3]{ 5.0, 0.0, -5.0 }, 5.0, 3.0, getColor(255, 0, 0));
 
     glutSwapBuffers();
@@ -134,6 +140,11 @@ void motionFunction(int x, int y) {
     previousMotionY = y;
 }
 
+void reshapeFunction(int width, int height) {
+    WINDOWS_WIDTH = width;
+    WINDOWS_HEIGHT = height;
+}
+
 /* End Control Functions */
  
 void initRendering() {
@@ -151,7 +162,7 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(600, 500);
+    glutInitWindowSize(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
     glutCreateWindow("Hello world!");
     initRendering();
@@ -160,6 +171,7 @@ int main(int argc, char** argv)
     glutKeyboardFunc(keyboardFunc);
     glutMouseFunc(mouseFunction);
     glutMotionFunc(motionFunction);
+    glutReshapeFunc(reshapeFunction);
 
     glutTimerFunc(25, update, 0);
 

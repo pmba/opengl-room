@@ -4,6 +4,8 @@
 #include <GL/glut.h>
 #include <vector>
 
-void buildWall(GLfloat* pivot, float width, float height, GLfloat* color);
+void buildWall(float vertices[4][3], GLfloat* color);
+
+void buildRoom();
 
 #endif

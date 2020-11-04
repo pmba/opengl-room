@@ -7,23 +7,25 @@
  
 #include "./libs/utils.h"
 #include "./libs/construction.h"
+#include "./libs/camera.h"
 
 #ifndef DEBUG
 #define DEBUG if (false)
 #endif
 
-#define CAMERA_SPEED 0.008
 #define MOV_SPEED 0.1
+
+/* Camera Constants */
+const float YAW = 0.005;
+const float PITCH = 0.005;
 
 using namespace std;
 
-int WINDOWS_WIDTH = 600;
-int WINDOWS_HEIGHT = 400;
+int WINDOWS_WIDTH = 800, WINDOWS_HEIGHT = 600;
 
-/* 0 <= xRotationAngle <= 2PI */
-float xRotationAngle = 4.8112;
-/* 0 <= yRotationAngle <= PI */
-float yRotationAngle = 1.4254;
+float cameraYaw = 4.8112;
+float cameraPitch = 1.4254;
+float* cameraUp = new float[3] { 0.0, 1.0, 0.0 };
 
 float cameraRadius = 5.f;
 
@@ -35,25 +37,20 @@ float* centerPoint = new float[3] { 0.0, 0.0, 0.0 };
 // The direction vector, will be used to determine the direction that we need to move
 float* directionVector = new float[3] { 0.0, 0.0, 0.0 };
 
+Camera camera;
+
 void setupCamera() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(atan(tan(50.0 * 3.14159 / 360.0) / 1.0) * 360.0 / 3.141593, 1.0, 0.1, 14);
+    gluPerspective(atan(tan(75 * M_PI / 360.0) / 1.0) * 360.0 / M_PI, WINDOWS_WIDTH/WINDOWS_HEIGHT, 0.1, 14);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    vector<float> positions = getSpherePositions(
-        centerPoint[0], centerPoint[1], centerPoint[2], 
-        cameraRadius, xRotationAngle, yRotationAngle
-    );
+    glm::mat3 lookUpMatrix = camera.getLookAtMatrix();
 
-    for (int vectorPos = 0; vectorPos < 3; ++vectorPos) {
-        directionVector[vectorPos] = (positions[vectorPos] - centerPoint[vectorPos]) / cameraRadius;
-    }
-
-    gluLookAt(centerPoint[0], centerPoint[1], centerPoint[2],
-              positions[0], positions[1], positions[2],
-              0.0, 1.0, 0.0);
+    gluLookAt(lookUpMatrix[0][0], lookUpMatrix[0][1], lookUpMatrix[0][2],
+              lookUpMatrix[1][0], lookUpMatrix[1][1], lookUpMatrix[1][2],
+              lookUpMatrix[2][0], lookUpMatrix[2][1], lookUpMatrix[2][2]);
 }
 
 void draw(void) {
@@ -65,7 +62,7 @@ void draw(void) {
 
     drawAxis(true, true, true);
 
-    buildWall(new float[3]{ 5.0, 0.0, -5.0 }, 5.0, 3.0, getColor(255, 0, 0));
+    buildRoom();
 
     glutSwapBuffers();
 }
@@ -78,66 +75,22 @@ void keyboardFunc(unsigned char key, int x, int y) {
             exit(EXIT_SUCCESS);
             break;
         case 'w':
-            centerPoint[0] += directionVector[0] * MOV_SPEED;
-            centerPoint[1] += directionVector[1] * MOV_SPEED;
-            centerPoint[2] += directionVector[2] * MOV_SPEED;
+            camera.moveForward();
             break;
         case 's':
-            centerPoint[0] -= directionVector[0] * MOV_SPEED;
-            centerPoint[1] -= directionVector[1] * MOV_SPEED;
-            centerPoint[2] -= directionVector[2] * MOV_SPEED;
+            camera.moveBackward();
             break;
-        default:
+        case 'a':
+            camera.moveLeft();
             break;
-    }
-}
-
-void mouseFunction(int button, int state, int x, int y) {
-    if ((button == 3) || (button == 4)) {
-        // Mouse wheel event
-        if (state == GLUT_UP) return;
-        if (button == 3) {
-            // Wheel Up
-            if (cameraRadius > 0.1) cameraRadius -= 0.1;
-        } else {
-            // Wheel Down
-            cameraRadius += 0.1;
-        }
+        case 'd':
+            camera.moveRight();
+            break;
     }
 }
 
 void motionFunction(int x, int y) {
-    DEBUG cout << "motionFunction : (X=" << x << ", Y=" << y << ")" << endl;
-
-    if (x < previousMotionX) {
-        // Moving mouse left direction
-        DEBUG cout << "motionFunction : Moving Left" << endl;
-        xRotationAngle += CAMERA_SPEED;
-    } else if (x > previousMotionX) {
-        // Moving mouse right direction
-        DEBUG cout << "motionFunction : Moving Right" << endl;
-        xRotationAngle -= CAMERA_SPEED;
-    }
-
-    if (xRotationAngle < 0) xRotationAngle = 2*M_PI;
-    else if (xRotationAngle > 2*M_PI) xRotationAngle = 0;
-
-    previousMotionX = x;
-
-    if (y < previousMotionY) {
-        // Moving mouse up
-        DEBUG cout << "motionFunction : Moving Up" << endl;
-        yRotationAngle += CAMERA_SPEED;
-    } else if (y > previousMotionY) {
-        // Moving mouse down
-        DEBUG cout << "motionFunction : Moving Down" << endl;
-        yRotationAngle -= CAMERA_SPEED;
-    }
-
-    if (yRotationAngle < 0) yRotationAngle = M_PI;
-    else if (yRotationAngle > M_PI) yRotationAngle = 0;
-
-    previousMotionY = y;
+    camera.mouseUpdate(glm::vec2(x, y));
 }
 
 void reshapeFunction(int width, int height) {
@@ -148,14 +101,35 @@ void reshapeFunction(int width, int height) {
 /* End Control Functions */
  
 void initRendering() {
+    glClearColor(0.7f, 0.9f, 1.0f, 1.0f);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
-    glClearColor(0.7f, 0.9f, 1.0f, 1.0f);
+
+    // Lighting set ]up
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	// Set lighting intensity and color
+	GLfloat qaAmbientLight[]	= {0.2, 0.2, 0.2, 1.0};
+	GLfloat qaDiffuseLight[]	= {0.8, 0.8, 0.8, 1.0};
+	GLfloat qaSpecularLight[]	= {1.0, 1.0, 1.0, 1.0};
+	glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
+
+	// Set the light position
+	GLfloat qaLightPosition[]	= {2.5, 3.0, -2.5, 1.0};
+	glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 }
 
 void update(int value) {
     glutPostRedisplay();
-    glutTimerFunc(60, update, 0);
+    glutTimerFunc(30, update, 0);
 }
 
 int main(int argc, char** argv)
@@ -164,16 +138,15 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
-    glutCreateWindow("Hello world!");
+    glutCreateWindow("Computação Gráfica - Quarto");
     initRendering();
 
     glutDisplayFunc(draw);
     glutKeyboardFunc(keyboardFunc);
-    glutMouseFunc(mouseFunction);
     glutMotionFunc(motionFunction);
     glutReshapeFunc(reshapeFunction);
 
-    glutTimerFunc(25, update, 0);
+    glutTimerFunc(30, update, 0);
 
     glutMainLoop();
     return 0;

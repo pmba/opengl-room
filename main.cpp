@@ -1,8 +1,5 @@
-// #define GL_GLEXT_PROTOTYPES
 #define GLEW_STATIC
-// #include <GL/gl.h>
-// #include <GL/glu.h>
-// #include <GL/glut.h>
+
 #include <GL/glew.h>
 #include <iostream>
 #include <unistd.h>
@@ -34,9 +31,9 @@ Texture vanGoghTexture;
 
 // Materials
 
-Material ambient(0.7, 0.7, 0.7, 0.8, 0.8, 0.8, 1.0, 1.0, 1.0, 50.0);
-Material chrome(0.25, 0.25, 0.25, 0.4, 0.4, 0.4, 0.774597, 0.774597, 0.774597, 0.6);
-Material silver(0.19225, 0.19225, 0.19225, 0.50754, 0.50754, 0.50754, 0.508273, 0.508273, 0.508273, 0.4);
+mat::Material ambient(0.7, 0.7, 0.7, 0.8, 0.8, 0.8, 1.0, 1.0, 1.0, 100);
+mat::Material chrome(0.25, 0.25, 0.25, 0.4, 0.4, 0.4, 0.774597, 0.774597, 0.774597, 76.8);
+mat::Material silver(0.19225, 0.19225, 0.19225, 0.50754, 0.50754, 0.50754, 0.508273, 0.508273, 0.508273, 51.2);
 
 // Light Props
 
@@ -206,7 +203,6 @@ void init(void)
 
    lampMesh = loader.LoadedMeshes[0].setup();
 
-
    baseSeatMesh = seatLoader.LoadedMeshes[0].setup();
    seatMesh = seatLoader.LoadedMeshes[1].setup();
 }
@@ -302,6 +298,7 @@ void display(void)
         glScalef(0.05, 0.05, 0.05);
 
         glColor3f(0.2, 0.2, 0.2);
+        lampMesh.material.active();
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
@@ -324,14 +321,19 @@ void display(void)
         glEnableClientState(GL_NORMAL_ARRAY);
         // glEnableClientState(GL_COLOR_ARRAY);
 
-
         glColor3f(0.3803921568627451, 0.403921568627451, 0.41568627450980394);
-        glVertexPointer(3, GL_FLOAT, 0, &baseSeatMesh.vertices_pointers[0]);
-        glNormalPointer(GL_FLOAT, 0, &baseSeatMesh.vertices_normals[0]);
-        glDrawElements(GL_TRIANGLES, baseSeatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &baseSeatMesh.indices_pointers[0]);
+        glPushMatrix();
+            baseSeatMesh.material.active();
+
+            glVertexPointer(3, GL_FLOAT, 0, &baseSeatMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &baseSeatMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, baseSeatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &baseSeatMesh.indices_pointers[0]);
+        glPopMatrix();
 
         glColor3f(0.8666666666666667, 0.8862745098039215, 0.8941176470588236);
         glPushMatrix();
+            seatMesh.material.active();
+
             glVertexPointer(3, GL_FLOAT, 0, &seatMesh.vertices_pointers[0]);
             glNormalPointer(GL_FLOAT, 0, &seatMesh.vertices_normals[0]);
             glDrawElements(GL_TRIANGLES, seatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &seatMesh.indices_pointers[0]);

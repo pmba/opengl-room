@@ -547,7 +547,7 @@ void buildWindowGlass()
     glPopMatrix();
 }
 
-void buildWindow(Material chrome)
+void buildWindow(mat::Material chrome)
 {
     glPushMatrix();
         chrome.active();

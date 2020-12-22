@@ -2,20 +2,13 @@
 
 #pragma once
 
-// Iostream - STD I/O Library
 #include <iostream>
-
-// Vector - STD Vector/Array Library
 #include <vector>
-
-// String - STD String Library
 #include <string>
-
-// fStream - STD File I/O Library
 #include <fstream>
-
-// Math.h - STD math Library
 #include <math.h>
+
+#include "material.h"
 
 // Print progress to console while loading (large models)
 #define OBJL_CONSOLE_OUTPUT
@@ -32,6 +25,8 @@ namespace objl
 		std::vector<float> vertices_normals;
 		std::vector<float> vertices_tex_coords;
 		std::vector<unsigned int> indices_pointers;
+
+		mat::Material material;
 	};
 
 	// Structure: Vector2
@@ -232,6 +227,13 @@ namespace objl
 			MeshInfo setup()
 			{
 				MeshInfo info;
+
+				info.material = mat::Material(
+					MeshMaterial.Ka.X, MeshMaterial.Ka.Y, MeshMaterial.Ka.Z,
+					MeshMaterial.Kd.X, MeshMaterial.Kd.Y, MeshMaterial.Kd.Z,
+					MeshMaterial.Ks.X, MeshMaterial.Ks.Y, MeshMaterial.Ks.Z,
+					100
+				);
 
 				for (unsigned int index : Indices) {
 					info.indices_pointers.push_back(index);

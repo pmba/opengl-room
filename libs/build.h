@@ -187,9 +187,6 @@ void buildBoard(Texture* texture, glm::vec3 color, glm::vec3 dimentions)
     glColor3fv(glm::value_ptr(color));
     glPushMatrix();
 
-        glRotatef(180, 0, 1, 0);
-        glTranslatef(-roomWidth + 3.5, 6, roomWidth - depth);
-
         glBegin(GL_QUADS);
 
             // Front Face

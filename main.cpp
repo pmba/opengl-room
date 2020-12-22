@@ -30,6 +30,7 @@ Texture doorTexture;
 Texture doorFrameTexture;
 Texture homeOfficeTexture;
 Texture booksTexture;
+Texture vanGoghTexture;
 
 // Materials
 
@@ -60,7 +61,15 @@ GLUquadric* cylinderQuadric;
 
 // Loader
 
+objl::Loader seatLoader;
+
 objl::Loader loader;
+objl::MeshInfo lampMesh;
+
+objl::MeshInfo baseSeatMesh;
+objl::MeshInfo seatMesh;
+
+static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
 // Animations
 
@@ -139,6 +148,9 @@ void initTextures()
 
     loadTexture("./objs/books/books.png", &booksTexture);
     setupTexture(&booksTexture);
+
+    loadTexture("./res/textures/gogh.png", &vanGoghTexture);
+    setupTexture(&vanGoghTexture);
 }
 
 void init(void)
@@ -191,6 +203,12 @@ void init(void)
    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE); 
 
    initTextures();
+
+   lampMesh = loader.LoadedMeshes[0].setup();
+
+
+   baseSeatMesh = seatLoader.LoadedMeshes[0].setup();
+   seatMesh = seatLoader.LoadedMeshes[1].setup();
 }
 
 void setupLightning()
@@ -262,24 +280,66 @@ void display(void)
     setupCamera();
     setupLightning();
 
-    glPushMatrix();
-      glTranslatef(light1_offset[0], light1_offset[1], light1_offset[2]); // Move the spotlight.
+    // glPushMatrix();
+    //   glTranslatef(light1_offset[0], light1_offset[1], light1_offset[2]); // Move the spotlight.
       
-      // Draw the spotlight cone in wireframe after disabling lighting
-      glPushMatrix();
-         glDisable(GL_LIGHTING);
-            glRotatef(-90.0, 1.0, 0.0, 0.0);
-            glColor3f(1.0, 0.0, 1.0);
-            glutSolidCone(3.0 * tan( light1_angle/180.0 * M_PI ), 3.0, 20, 20);
-         glEnable(GL_LIGHTING);
-      glPopMatrix();
+    //   // Draw the spotlight cone in wireframe after disabling lighting
+    //   glPushMatrix();
+    //      glDisable(GL_LIGHTING);
+    //         glRotatef(-90.0, 1.0, 0.0, 0.0);
+    //         glColor3f(1.0, 0.0, 1.0);
+    //         glutSolidCone(3.0 * tan( light1_angle/180.0 * M_PI ), 3.0, 20, 20);
+    //      glEnable(GL_LIGHTING);
+    //   glPopMatrix();
     
-   glPopMatrix();
-
+    // glPopMatrix();
+    
     ambient.active();
 
+    glPushMatrix();
+        glTranslatef(lamp_offset[0], lamp_offset[1], lamp_offset[2]);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.05, 0.05, 0.05);
+
+        glColor3f(0.2, 0.2, 0.2);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        // glEnableClientState(GL_COLOR_ARRAY);
+
+        glVertexPointer(3, GL_FLOAT, 0, &lampMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &lampMesh.vertices_normals[0]);
+
+        glDrawElements(GL_TRIANGLES, lampMesh.indices_pointers.size(), GL_UNSIGNED_INT, &lampMesh.indices_pointers[0]);
+    glPopMatrix();
+
+    // Seat
+        glPushMatrix();
+        glTranslatef(1, 0, -roomWidth + 1);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.15, 0.15, 0.15);
+
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        // glEnableClientState(GL_COLOR_ARRAY);
+
+
+        glColor3f(0.3803921568627451, 0.403921568627451, 0.41568627450980394);
+        glVertexPointer(3, GL_FLOAT, 0, &baseSeatMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &baseSeatMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, baseSeatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &baseSeatMesh.indices_pointers[0]);
+
+        glColor3f(0.8666666666666667, 0.8862745098039215, 0.8941176470588236);
+        glPushMatrix();
+            glVertexPointer(3, GL_FLOAT, 0, &seatMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &seatMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, seatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &seatMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
+
     buildFrontWall(&wallTexture);
-    // buildBackWall(&wallTexture);
+    buildBackWall(&wallTexture);
     buildLeftWall(&wallTexture);
     buildRightWall(&wallTexture);
     buildRoof(&wallTexture);
@@ -290,7 +350,18 @@ void display(void)
     checkDoorAngle();
     buildDoor(&doorTexture, doorAngle);
 
-    buildBoard(&homeOfficeTexture, rgb(154, 149, 143), {1.5, 1.8618, 0.1});
+    glPushMatrix();
+        glRotatef(180, 0, 1, 0);
+        glTranslatef(-roomWidth + 3.5, 6, roomWidth - 0.1);
+        buildBoard(&homeOfficeTexture, rgb(154, 149, 143), {1.5, 1.8618, 0.1});
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(5.25, 4, -roomWidth + 0.1);
+        glRotatef(180, 0, 1, 0);
+        buildBoard(&vanGoghTexture, rgb(154, 149, 143), {4.5, 3, 0.1});
+    glPopMatrix();
+
     buildTable(false);
     // buildTable(true);
 
@@ -363,28 +434,28 @@ void keyboard (unsigned char key, int x, int y)
             break;
 
         case '4':
-            light1_offset[0] -= 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[0] -= 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
             break;
         case '5':
-            light1_offset[2] += 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[2] += 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
             break;
         case '6':
-            light1_offset[0] += 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[0] += 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
             break;
         case '8':
-            light1_offset[2] -= 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[2] -= 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
             break;
         case '7':
-            light1_offset[1] += 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[1] += 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
             break;
         case '9':
-            light1_offset[1] -= 0.2;
-            cout << light1_offset[0] << ", " << light1_offset[1] << ", " << light1_offset[2] << endl;
+            lamp_offset[1] -= 0.8;
+            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << light1_offset[2] << endl;
             break;
         
         default:
@@ -431,9 +502,8 @@ int main(int argc, char** argv)
    glutMotionFunc(motion);
    glutTimerFunc(30, update, 0);
 
-    // bool loadout = loader.LoadFile("./objs/books/books.obj");
-
-    // cout << "Loadout: " << loadout << endl;
+    bool loadout = loader.LoadFile("./objs/lamp/lamp.obj");
+    loadout = seatLoader.LoadFile("./objs/seat/seat.obj");
 
    init();
    glutMainLoop();

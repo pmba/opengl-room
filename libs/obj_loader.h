@@ -26,6 +26,14 @@
 //	is needed and used for the OBJ Model Loader
 namespace objl
 {
+	struct MeshInfo
+	{
+		std::vector<float> vertices_pointers;
+		std::vector<float> vertices_normals;
+		std::vector<float> vertices_tex_coords;
+		std::vector<unsigned int> indices_pointers;
+	};
+
 	// Structure: Vector2
 	//
 	// Description: A 2D Vector that Holds Positional Data
@@ -191,28 +199,60 @@ namespace objl
 	//
 	// Description: A Simple Mesh Object that holds
 	//	a name, a vertex list, and an index list
-	struct Mesh
+	class Mesh
 	{
-		// Default Constructor
-		Mesh()
-		{
+		public:
+			// Default Constructor
+			Mesh()
+			{
 
-		}
-		// Variable Set Constructor
-		Mesh(std::vector<Vertex>& _Vertices, std::vector<unsigned int>& _Indices)
-		{
-			Vertices = _Vertices;
-			Indices = _Indices;
-		}
-		// Mesh Name
-		std::string MeshName;
-		// Vertex List
-		std::vector<Vertex> Vertices;
-		// Index List
-		std::vector<unsigned int> Indices;
+			}
+			// Variable Set Constructor
+			Mesh(std::vector<Vertex>& _Vertices, std::vector<unsigned int>& _Indices)
+			{
+				Vertices = _Vertices;
+				Indices = _Indices;
+			}
+			// Mesh Name
+			std::string MeshName;
+			// Vertex List
+			std::vector<Vertex> Vertices;
+			// Index List
+			std::vector<unsigned int> Indices;
 
-		// Material
-		Material MeshMaterial;
+			float* vertices_pointers;
+			float* vertices_normals;
+			float* vertices_tex_coords;
+			unsigned int* indices_pointers;
+			int indices_count;
+
+			// Material
+			Material MeshMaterial;
+
+			MeshInfo setup()
+			{
+				MeshInfo info;
+
+				for (unsigned int index : Indices) {
+					info.indices_pointers.push_back(index);
+				}
+
+				for (Vertex vertex : Vertices)
+				{
+					info.vertices_pointers.push_back(vertex.Position.X);
+					info.vertices_pointers.push_back(vertex.Position.Y);
+					info.vertices_pointers.push_back(vertex.Position.Z);
+
+					info.vertices_normals.push_back(vertex.Normal.X);
+					info.vertices_normals.push_back(vertex.Normal.Y);
+					info.vertices_normals.push_back(vertex.Normal.Z);
+
+					info.vertices_tex_coords.push_back(vertex.TextureCoordinate.X);
+					info.vertices_tex_coords.push_back(vertex.TextureCoordinate.Y);
+				}
+
+				return info;
+			}
 	};
 
 	// Namespace: Math

@@ -78,6 +78,10 @@ objl::MeshInfo monitorMesh;
 objl::MeshInfo monitorScreenMesh;
 objl::MeshInfo monitorWebcamMesh;
 
+objl::Loader keyboardLoader;
+objl::MeshInfo keyboardMesh;
+objl::MeshInfo keyboardLettersMesh;
+
 static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
 // Animations
@@ -233,6 +237,9 @@ void init(void)
    monitorMesh = monitorLoader.LoadedMeshes[0].setup();
    monitorScreenMesh = monitorLoader.LoadedMeshes[1].setup();
    monitorWebcamMesh = monitorLoader.LoadedMeshes[2].setup();
+
+    keyboardLettersMesh = keyboardLoader.LoadedMeshes[0].setup();
+    keyboardMesh = keyboardLoader.LoadedMeshes[1].setup();
 }
 
 void setupLightning()
@@ -315,6 +322,32 @@ void display(void)
     setupLightning();
     
     ambient.active();
+
+    // Keyboard
+    glPushMatrix();
+        glTranslatef(15, 3.3, -18);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.03, 0.03, 0.03);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        keyboardMesh.material.active();
+        keyboardMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &keyboardMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &keyboardMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, keyboardMesh.indices_pointers.size(), GL_UNSIGNED_INT, &keyboardMesh.indices_pointers[0]);
+
+        glPushMatrix();
+            keyboardLettersMesh.material.active();
+            keyboardLettersMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &keyboardLettersMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &keyboardLettersMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, keyboardLettersMesh.indices_pointers.size(), GL_UNSIGNED_INT, &keyboardLettersMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
 
     // Monitor
     glPushMatrix();
@@ -619,6 +652,7 @@ int main(int argc, char** argv)
     chairLoader.LoadFile("./objs/chair/chair.obj");
     fanLoader.LoadFile("./objs/fan/fan.obj");
     monitorLoader.LoadFile("./objs/monitor/monitor.obj");
+    keyboardLoader.LoadFile("./objs/keyboard/keyboard.obj");
 
     init();
     glutMainLoop();

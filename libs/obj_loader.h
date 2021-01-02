@@ -245,9 +245,9 @@ namespace objl
 					info.vertices_pointers.push_back(vertex.Position.Y);
 					info.vertices_pointers.push_back(vertex.Position.Z);
 
-					info.vertices_normals.push_back(vertex.Normal.X);
-					info.vertices_normals.push_back(vertex.Normal.Y);
-					info.vertices_normals.push_back(vertex.Normal.Z);
+					info.vertices_normals.push_back(-vertex.Normal.X);
+					info.vertices_normals.push_back(-vertex.Normal.Y);
+					info.vertices_normals.push_back(-vertex.Normal.Z);
 
 					info.vertices_tex_coords.push_back(vertex.TextureCoordinate.X);
 					info.vertices_tex_coords.push_back(vertex.TextureCoordinate.Y);

@@ -52,5 +52,10 @@ namespace mat {
             glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
             glMaterialf(GL_FRONT, GL_SHININESS, high_shininess);
         }
+
+        void dye()
+        {
+            glColor3f(diffuse_r, diffuse_g, diffuse_b);
+        }
     };
 }

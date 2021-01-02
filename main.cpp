@@ -56,15 +56,22 @@ static GLfloat light1_exponent	    = 2.0;
 
 GLUquadric* cylinderQuadric;
 
-// Loader
-
-objl::Loader seatLoader;
+// Loader & Meshs
 
 objl::Loader loader;
 objl::MeshInfo lampMesh;
 
+objl::Loader seatLoader;
 objl::MeshInfo baseSeatMesh;
 objl::MeshInfo seatMesh;
+
+objl::Loader chairLoader;
+objl::MeshInfo chairMesh;
+objl::MeshInfo chairSeatMesh;
+
+objl::Loader fanLoader;
+objl::MeshInfo fanMesh;
+objl::MeshInfo fanPropellerMesh;
 
 static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
@@ -75,6 +82,12 @@ GLfloat doorAngle = 0.f;
 
 AnimationState windowAnimation = IDLE;
 GLfloat windowTranslation = 1.f;
+
+AnimationState fanAnimation = FORWARDS;
+const GLfloat FAN_LOW_SPEED = 8.0f;
+const GLfloat FAN_MAX_SPEED = 16.0f;
+GLfloat fanRotation = 1.f;
+GLfloat fanRotationSpeed = FAN_LOW_SPEED;
 
 using namespace std;
 
@@ -205,6 +218,12 @@ void init(void)
 
    baseSeatMesh = seatLoader.LoadedMeshes[0].setup();
    seatMesh = seatLoader.LoadedMeshes[1].setup();
+
+   chairMesh = chairLoader.LoadedMeshes[0].setup();
+   chairSeatMesh = chairLoader.LoadedMeshes[1].setup();
+
+   fanMesh = fanLoader.LoadedMeshes[0].setup();
+   fanPropellerMesh = fanLoader.LoadedMeshes[1].setup();
 }
 
 void setupLightning()
@@ -247,6 +266,16 @@ void setupCamera()
               lookUpMatrix[2][0], lookUpMatrix[2][1], lookUpMatrix[2][2]);
 }
 
+void checkFanRotation()
+{
+    if (fanAnimation == FORWARDS || fanAnimation ==  BACKWARDS)
+    {
+        fanRotation += fanAnimation == FORWARDS ? fanRotationSpeed : -fanRotationSpeed;
+        if (fanRotationSpeed > 360) fanRotationSpeed = 0;
+        else if (fanRotationSpeed < 0) fanRotationSpeed = 360;
+    }
+}
+
 void checkDoorAngle()
 {
     if (doorAnimation == FORWARDS || doorAnimation == BACKWARDS)
@@ -275,22 +304,71 @@ void display(void)
 
     setupCamera();
     setupLightning();
-
-    // glPushMatrix();
-    //   glTranslatef(light1_offset[0], light1_offset[1], light1_offset[2]); // Move the spotlight.
-      
-    //   // Draw the spotlight cone in wireframe after disabling lighting
-    //   glPushMatrix();
-    //      glDisable(GL_LIGHTING);
-    //         glRotatef(-90.0, 1.0, 0.0, 0.0);
-    //         glColor3f(1.0, 0.0, 1.0);
-    //         glutSolidCone(3.0 * tan( light1_angle/180.0 * M_PI ), 3.0, 20, 20);
-    //      glEnable(GL_LIGHTING);
-    //   glPopMatrix();
-    
-    // glPopMatrix();
     
     ambient.active();
+
+    // Fan
+    glPushMatrix();
+        GLfloat fanTranslate[3] = {1.8, 4.25, -17.3};
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        glPushMatrix();
+            glTranslatef(fanTranslate[0], fanTranslate[1], fanTranslate[2]);
+            // glRotatef(30, 0, 1, 0);
+            glRotatef(-90, 1, 0, 0);
+            glScalef(0.05, 0.05, 0.05);
+
+            fanMesh.material.active();
+            fanMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &fanMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &fanMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, fanMesh.indices_pointers.size(), GL_UNSIGNED_INT, &fanMesh.indices_pointers[0]);
+        glPopMatrix();
+
+        checkFanRotation();
+        glTranslatef(fanTranslate[0], fanTranslate[1], fanTranslate[2]);
+        glScalef(0.05, 0.05, 0.05);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(fanRotation, 0, 1, 0);
+
+        glPushMatrix();
+            fanPropellerMesh.material.active();
+            fanPropellerMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &fanPropellerMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &fanPropellerMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, fanPropellerMesh.indices_pointers.size(), GL_UNSIGNED_INT, &fanPropellerMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
+
+    // Chair
+    glPushMatrix();
+        glTranslatef(16, 0, -15);
+        glRotatef(-170, 0, 1, 0);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.15, 0.15, 0.15);
+
+        chairMesh.material.active();
+        chairMesh.material.dye();
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        glVertexPointer(3, GL_FLOAT, 0, &chairMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &chairMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, chairMesh.indices_pointers.size(), GL_UNSIGNED_INT, &chairMesh.indices_pointers[0]);
+
+        glPushMatrix();
+            chairSeatMesh.material.active();
+            chairSeatMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &chairSeatMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &chairSeatMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, chairSeatMesh.indices_pointers.size(), GL_UNSIGNED_INT, &chairSeatMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
 
     glPushMatrix();
         glTranslatef(lamp_offset[0], lamp_offset[1], lamp_offset[2]);
@@ -302,7 +380,6 @@ void display(void)
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
-        // glEnableClientState(GL_COLOR_ARRAY);
 
         glVertexPointer(3, GL_FLOAT, 0, &lampMesh.vertices_pointers[0]);
         glNormalPointer(GL_FLOAT, 0, &lampMesh.vertices_normals[0]);
@@ -311,7 +388,11 @@ void display(void)
     glPopMatrix();
 
     // Seat
-        glPushMatrix();
+    glPushMatrix();
+        glEnable(GL_NORMALIZE);
+        glDisable( GL_CULL_FACE );
+        glShadeModel(GL_SMOOTH);
+
         glTranslatef(1, 0, -roomWidth + 1);
         glRotatef(-90, 1, 0, 0);
         glScalef(0.15, 0.15, 0.15);
@@ -434,7 +515,17 @@ void keyboard (unsigned char key, int x, int y)
             light1_enabled = !light1_enabled;
             if (!light1_enabled) glDisable(GL_LIGHT1);
             break;
-
+        case 'v':
+            if (fanAnimation == IDLE) {
+                fanRotationSpeed = FAN_LOW_SPEED;
+                fanAnimation = FORWARDS;
+            } else if (fanRotationSpeed == FAN_LOW_SPEED) {
+                fanRotationSpeed = FAN_MAX_SPEED;
+            } else if (fanRotationSpeed == FAN_MAX_SPEED) {
+                fanAnimation = IDLE;
+                fanRotationSpeed = FAN_LOW_SPEED;
+            }
+            break;
         case '4':
             lamp_offset[0] -= 0.8;
             cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
@@ -490,24 +581,26 @@ void update(int value) {
 
 int main(int argc, char** argv)
 {
-   glutInit(&argc, argv);
-   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-   glutInitWindowSize(windows_w, windows_h);
-   glutInitWindowPosition(100, 100);
-   
-   glutCreateWindow("Trabalho Final - CG");
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(windows_w, windows_h);
+    glutInitWindowPosition(100, 100);
+    
+    glutCreateWindow("Trabalho Final - CG");
 
-   glutDisplayFunc(display);
-   glutReshapeFunc(reshape);
-   glutKeyboardFunc(keyboard);
-   glutSpecialFunc(specialKeyInput);
-   glutMotionFunc(motion);
-   glutTimerFunc(30, update, 0);
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+    glutSpecialFunc(specialKeyInput);
+    glutMotionFunc(motion);
+    glutTimerFunc(30, update, 0);
 
-    bool loadout = loader.LoadFile("./objs/lamp/lamp.obj");
-    loadout = seatLoader.LoadFile("./objs/seat/seat.obj");
+    loader.LoadFile("./objs/lamp/lamp.obj");
+    seatLoader.LoadFile("./objs/seat/seat.obj");
+    chairLoader.LoadFile("./objs/chair/chair.obj");
+    fanLoader.LoadFile("./objs/fan/fan.obj");
 
-   init();
-   glutMainLoop();
-   return 0; 
+    init();
+    glutMainLoop();
+    return 0; 
 }

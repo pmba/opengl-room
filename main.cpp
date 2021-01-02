@@ -73,6 +73,11 @@ objl::Loader fanLoader;
 objl::MeshInfo fanMesh;
 objl::MeshInfo fanPropellerMesh;
 
+objl::Loader monitorLoader;
+objl::MeshInfo monitorMesh;
+objl::MeshInfo monitorScreenMesh;
+objl::MeshInfo monitorWebcamMesh;
+
 static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
 // Animations
@@ -224,6 +229,10 @@ void init(void)
 
    fanMesh = fanLoader.LoadedMeshes[0].setup();
    fanPropellerMesh = fanLoader.LoadedMeshes[1].setup();
+
+   monitorMesh = monitorLoader.LoadedMeshes[0].setup();
+   monitorScreenMesh = monitorLoader.LoadedMeshes[1].setup();
+   monitorWebcamMesh = monitorLoader.LoadedMeshes[2].setup();
 }
 
 void setupLightning()
@@ -306,6 +315,41 @@ void display(void)
     setupLightning();
     
     ambient.active();
+
+    // Monitor
+    glPushMatrix();
+        glTranslatef(17, 3.3, -19);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.1, 0.1, 0.1);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        monitorMesh.material.active();
+        monitorMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &monitorMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &monitorMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, monitorMesh.indices_pointers.size(), GL_UNSIGNED_INT, &monitorMesh.indices_pointers[0]);
+
+        glPushMatrix();
+            monitorScreenMesh.material.active();
+            monitorScreenMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &monitorScreenMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &monitorScreenMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, monitorScreenMesh.indices_pointers.size(), GL_UNSIGNED_INT, &monitorScreenMesh.indices_pointers[0]);
+        glPopMatrix();
+
+        glPushMatrix();
+            monitorWebcamMesh.material.active();
+            monitorWebcamMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &monitorWebcamMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &monitorWebcamMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, monitorWebcamMesh.indices_pointers.size(), GL_UNSIGNED_INT, &monitorWebcamMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
 
     // Fan
     glPushMatrix();
@@ -526,31 +570,6 @@ void keyboard (unsigned char key, int x, int y)
                 fanRotationSpeed = FAN_LOW_SPEED;
             }
             break;
-        case '4':
-            lamp_offset[0] -= 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
-            break;
-        case '5':
-            lamp_offset[2] += 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
-            break;
-        case '6':
-            lamp_offset[0] += 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
-            break;
-        case '8':
-            lamp_offset[2] -= 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
-            break;
-        case '7':
-            lamp_offset[1] += 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << lamp_offset[2] << endl;
-            break;
-        case '9':
-            lamp_offset[1] -= 0.8;
-            cout << lamp_offset[0] << ", " << lamp_offset[1] << ", " << light1_offset[2] << endl;
-            break;
-        
         default:
             break;
     }
@@ -599,6 +618,7 @@ int main(int argc, char** argv)
     seatLoader.LoadFile("./objs/seat/seat.obj");
     chairLoader.LoadFile("./objs/chair/chair.obj");
     fanLoader.LoadFile("./objs/fan/fan.obj");
+    monitorLoader.LoadFile("./objs/monitor/monitor.obj");
 
     init();
     glutMainLoop();

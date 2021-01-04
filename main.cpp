@@ -26,8 +26,10 @@ Texture windowTexture;
 Texture doorTexture;
 Texture doorFrameTexture;
 Texture homeOfficeTexture;
-Texture booksTexture;
 Texture vanGoghTexture;
+
+Texture woodTexture;
+Texture sheetTexture;
 
 // Materials
 
@@ -81,6 +83,11 @@ objl::MeshInfo monitorWebcamMesh;
 objl::Loader keyboardLoader;
 objl::MeshInfo keyboardMesh;
 objl::MeshInfo keyboardLettersMesh;
+
+objl::Loader bedLoader;
+objl::MeshInfo bedMesh;
+objl::MeshInfo bedMattressMesh;
+objl::MeshInfo bedPillowMesh;
 
 static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
@@ -165,11 +172,14 @@ void initTextures()
     loadTexture("./res/textures/home-office.png", &homeOfficeTexture);
     setupTexture(&homeOfficeTexture);
 
-    loadTexture("./objs/books/books.png", &booksTexture);
-    setupTexture(&booksTexture);
-
     loadTexture("./res/textures/gogh.png", &vanGoghTexture);
     setupTexture(&vanGoghTexture);
+
+    loadTexture("./objs/bed/wood.png", &woodTexture);
+    setupTexture(&woodTexture);
+
+    loadTexture("./objs/bed/sheet.png", &sheetTexture);
+    setupTexture(&sheetTexture);
 }
 
 void init(void)
@@ -240,6 +250,10 @@ void init(void)
 
     keyboardLettersMesh = keyboardLoader.LoadedMeshes[0].setup();
     keyboardMesh = keyboardLoader.LoadedMeshes[1].setup();
+
+    bedMesh = bedLoader.LoadedMeshes[0].setup();
+    bedMattressMesh = bedLoader.LoadedMeshes[1].setup();
+    bedPillowMesh = bedLoader.LoadedMeshes[2].setup(false);
 }
 
 void setupLightning()
@@ -498,6 +512,58 @@ void display(void)
         glPopMatrix();
     glPopMatrix();
 
+    glPushMatrix();
+        glTranslatef(12, -3.1, -4);
+        glRotatef(-90, 0, 1, 0);
+        glScalef(0.3, 0.3, 0.3);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        glBindTexture(GL_TEXTURE_2D, woodTexture.id);
+
+        bedMesh.material.active();
+        // bedMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &bedMesh.vertices_pointers[0]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &bedMesh.vertices_tex_coords[0]);
+        glNormalPointer(GL_FLOAT, 0, &bedMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, bedMesh.indices_pointers.size(), GL_UNSIGNED_INT, &bedMesh.indices_pointers[0]);
+        
+        glDisable(GL_TEXTURE_2D);
+        // glFlush();
+
+        glPushMatrix();
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+            glBindTexture(GL_TEXTURE_2D, sheetTexture.id);
+
+            bedMattressMesh.material.active();
+            // bedMattressMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &bedMattressMesh.vertices_pointers[0]);
+            glTexCoordPointer(2, GL_FLOAT, 0, &bedMattressMesh.vertices_tex_coords[0]);
+            glNormalPointer(GL_FLOAT, 0, &bedMattressMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, bedMattressMesh.indices_pointers.size(), GL_UNSIGNED_INT, &bedMattressMesh.indices_pointers[0]);
+
+            glDisable(GL_TEXTURE_2D);
+        glPopMatrix();
+
+        glPushMatrix();
+            bedPillowMesh.material.active();
+
+            glVertexPointer(3, GL_FLOAT, 0, &bedPillowMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &bedPillowMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, bedPillowMesh.indices_pointers.size(), GL_UNSIGNED_INT, &bedPillowMesh.indices_pointers[0]);
+        glPopMatrix();
+
+        glFlush();
+    glPopMatrix();
+    
+
     buildFrontWall(&wallTexture);
     buildBackWall(&wallTexture);
     buildLeftWall(&wallTexture);
@@ -653,6 +719,7 @@ int main(int argc, char** argv)
     fanLoader.LoadFile("./objs/fan/fan.obj");
     monitorLoader.LoadFile("./objs/monitor/monitor.obj");
     keyboardLoader.LoadFile("./objs/keyboard/keyboard.obj");
+    bedLoader.LoadFile("./objs/bed/bed.obj");
 
     init();
     glutMainLoop();

@@ -27,9 +27,9 @@ Texture doorTexture;
 Texture doorFrameTexture;
 Texture homeOfficeTexture;
 Texture vanGoghTexture;
-
 Texture woodTexture;
 Texture sheetTexture;
+Texture screenTexture;
 
 // Materials
 
@@ -88,6 +88,17 @@ objl::Loader bedLoader;
 objl::MeshInfo bedMesh;
 objl::MeshInfo bedMattressMesh;
 objl::MeshInfo bedPillowMesh;
+
+objl::Loader mouseLoader;
+objl::MeshInfo mouseMesh;
+objl::MeshInfo mousepadMesh;
+
+objl::Loader bedsideLoader;
+objl::MeshInfo bedsideMesh;
+
+objl::Loader cactusLoader;
+objl::MeshInfo cactusMesh;
+objl::MeshInfo cactusPlantMesh;
 
 static GLfloat lamp_offset[] = { 19, 3.3, -20 };
 
@@ -180,6 +191,9 @@ void initTextures()
 
     loadTexture("./objs/bed/sheet.png", &sheetTexture);
     setupTexture(&sheetTexture);
+
+    loadTexture("./res/textures/screen.png", &screenTexture);
+    setupTexture(&screenTexture);
 }
 
 void init(void)
@@ -254,6 +268,14 @@ void init(void)
     bedMesh = bedLoader.LoadedMeshes[0].setup();
     bedMattressMesh = bedLoader.LoadedMeshes[1].setup();
     bedPillowMesh = bedLoader.LoadedMeshes[2].setup(false);
+
+    mouseMesh = mouseLoader.LoadedMeshes[0].setup();
+    mousepadMesh = mouseLoader.LoadedMeshes[1].setup();
+
+    bedsideMesh = bedsideLoader.LoadedMeshes[0].setup();
+
+    cactusMesh = cactusLoader.LoadedMeshes[0].setup();
+    cactusPlantMesh = cactusLoader.LoadedMeshes[1].setup();
 }
 
 void setupLightning()
@@ -337,6 +359,83 @@ void display(void)
     
     ambient.active();
 
+    // Bedside table
+    glPushMatrix();
+        glTranslatef(2, 0, -10);
+        glRotatef(180, 0, 1, 0);
+        glScalef(0.8, 0.8, 0.8);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        glBindTexture(GL_TEXTURE_2D, woodTexture.id);
+
+        bedsideMesh.material.active();
+        bedsideMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &bedsideMesh.vertices_pointers[0]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &bedsideMesh.vertices_tex_coords[0]);
+        glNormalPointer(GL_FLOAT, 0, &bedsideMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, bedsideMesh.indices_pointers.size(), GL_UNSIGNED_INT, &bedsideMesh.indices_pointers[0]);
+        
+        glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+
+    // Cactus
+    glPushMatrix();
+        glTranslatef(2, 2.4, -10);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.01, 0.01, 0.01);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        cactusMesh.material.active();
+        cactusMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &cactusMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &cactusMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, cactusMesh.indices_pointers.size(), GL_UNSIGNED_INT, &cactusMesh.indices_pointers[0]);
+
+        glPushMatrix();
+            cactusPlantMesh.material.active();
+            cactusPlantMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &cactusPlantMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &cactusPlantMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, cactusPlantMesh.indices_pointers.size(), GL_UNSIGNED_INT, &cactusPlantMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
+
+    // Mouse and Mousepad
+    glPushMatrix();
+        glTranslatef(17, 3.32, -18);
+        glRotatef(-90, 1, 0, 0);
+        glScalef(0.02, 0.02, 0.02);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+
+        mouseMesh.material.active();
+        mouseMesh.material.dye();
+
+        glVertexPointer(3, GL_FLOAT, 0, &mouseMesh.vertices_pointers[0]);
+        glNormalPointer(GL_FLOAT, 0, &mouseMesh.vertices_normals[0]);
+        glDrawElements(GL_TRIANGLES, mouseMesh.indices_pointers.size(), GL_UNSIGNED_INT, &mouseMesh.indices_pointers[0]);
+
+        glPushMatrix();
+            mousepadMesh.material.active();
+            mousepadMesh.material.dye();
+
+            glVertexPointer(3, GL_FLOAT, 0, &mousepadMesh.vertices_pointers[0]);
+            glNormalPointer(GL_FLOAT, 0, &mousepadMesh.vertices_normals[0]);
+            glDrawElements(GL_TRIANGLES, mousepadMesh.indices_pointers.size(), GL_UNSIGNED_INT, &mousepadMesh.indices_pointers[0]);
+        glPopMatrix();
+    glPopMatrix();
+
     // Keyboard
     glPushMatrix();
         glTranslatef(15, 3.3, -18);
@@ -396,6 +495,32 @@ void display(void)
             glNormalPointer(GL_FLOAT, 0, &monitorWebcamMesh.vertices_normals[0]);
             glDrawElements(GL_TRIANGLES, monitorWebcamMesh.indices_pointers.size(), GL_UNSIGNED_INT, &monitorWebcamMesh.indices_pointers[0]);
         glPopMatrix();
+    glPopMatrix();
+
+    glPushMatrix();
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        glBindTexture(GL_TEXTURE_2D, screenTexture.id);
+
+        glTranslatef(14, 3.76, -18.99);
+        glBegin(GL_QUADS);
+            glColor3f(1, 0, 0);
+
+            glTexCoord2f(0, 1);
+            glVertex3f(0, 0, 0);
+
+            glTexCoord2f(1, 1);
+            glVertex3f(2.73, 0, 0);
+
+            glTexCoord2f(1, 0);
+            glVertex3f(2.73, 1.65, 0);
+
+            glTexCoord2f(0, 0);
+            glVertex3f(0, 1.65, 0);
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D);
+        glFlush();
     glPopMatrix();
 
     // Fan
@@ -720,6 +845,9 @@ int main(int argc, char** argv)
     monitorLoader.LoadFile("./objs/monitor/monitor.obj");
     keyboardLoader.LoadFile("./objs/keyboard/keyboard.obj");
     bedLoader.LoadFile("./objs/bed/bed.obj");
+    mouseLoader.LoadFile("./objs/mouse/mouse.obj");
+    bedsideLoader.LoadFile("./objs/bedside/bedside.obj");
+    cactusLoader.LoadFile("./objs/cactus/cactus.obj");
 
     init();
     glutMainLoop();

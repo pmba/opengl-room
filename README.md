@@ -6,6 +6,20 @@ This is a simple C++ and OpenGL project to render a 3d room space with diverse o
      alt="A simple room scene preview"
      style="float: left; margin-right: 10px;" />
 
+## Table of Contents
+
+- [OpenGL Room](#opengl-room)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Usage](#usage)
+    - [Compiling and Executing (By Hand)](#compiling-and-executing-by-hand)
+    - [Using Makefile](#using-makefile)
+  - [Controls](#controls)
+    - [Movement Controls](#movement-controls)
+    - [Objects Controls](#objects-controls)
+  - [Contributing](#contributing)
+  - [License](#license)
+
 ## Prerequisites
 
 The only prerequisites are:
